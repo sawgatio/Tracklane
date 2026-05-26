@@ -1,0 +1,78 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+  
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ApplicationStatus {
+  WISHLIST
+  APPLIED
+  SCREENING
+  INTERVIEW
+  OFFER
+  REJECTED
+  WITHDRAW
+}
+
+enum LocationType {
+  ONSITE
+  REMOTE
+  HYBRID
+}
+
+model User {
+  id            String      @id @default(cuid())
+  name          String?
+  email         String      @unique
+  passwordHash  String 
+  createdAt     DateTime    @default(now())    
+  updatedAt     DateTime    @updatedAt
+
+  applications Application[]   
+}
+
+
+model Company {
+  id          String      @id @default(cuid())
+  name        String
+  website     String?
+  location    String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  applications Application[]
+  @@unique([name,website])
+}
+
+model Application {
+  id            String        @id @default(cuid())
+  role          String      
+  status        ApplicationStatus   @default(WISHLIST)
+  locationType  LocationType?
+  jobUrl        String?
+  source        String?
+  salaryMin     Int?
+  salaryMax     Int?
+  appliedAt     DateTime?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  userId        String
+  companyId     String
+
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company       Company          @relation(fields: [companyId], references: [id],onDelete: Cascade)
+
+  @@index([userId])
+  @@index([companyId])
+  @@index([status])  
+
+}
