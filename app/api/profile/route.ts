@@ -1,28 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import jwt, { JwtPayload } from "jsonwebtoken";
 import { prisma } from "@/lib/prisma";
+import { getUserFromRequest } from "@/lib/auth"
 
 
-interface UserPayload extends JwtPayload {
-    userId: string;
-    email: string
-}
 
 export async function GET(req:NextRequest){
-    const header = req.headers.get("authorization");
-    
-    if(!header || !header.startsWith("Bearer ")){
-        return NextResponse.json(
-            {message:"Header doesn't exist"},
-            {status:401}
-        );
-    }
-    const token = header.split(" ")[1];
-    try{
-            const decoded = jwt.verify(
-                token
-            ,process.env.JWT_SECRET!) as UserPayload;
 
+    try{
+            const decoded = await getUserFromRequest(req);
             const user = await prisma.user.findUnique({
                 where: {
                     id: decoded.userId,
@@ -34,23 +19,30 @@ export async function GET(req:NextRequest){
                 },
             });
 
-            if(!user){
+            if(!user || user == null){
                 return NextResponse.json(
-                    { message: "User not found"},
-                    { status: 404}
-                );
+                    {message: "User not found"},
+                    {status:404}
+                )
             }
         
             return NextResponse.json({
                 user,
             });
-    } catch(error){
-        console.log(error)
+        }
+    catch(error){
+        console.log(error);
+        if (error instanceof Error && error.message === "Authentication failed")
         return NextResponse.json(
-            {message: "Invalid or expired token"},
+            {message: error.message},
             {status: 401}
         )
-    }
-
+        console.error("Profile route error:", error);
+        return NextResponse.json(
+            { message: "Internal server error" },
+            { status: 500 }
+          );
+    }  
+    
 
 }

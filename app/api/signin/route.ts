@@ -64,6 +64,7 @@ export async function POST(req:NextRequest){
                 message: "Signin successful",
                 token,
                 user: {
+                    
                     id: existingUser.id,
                     name: existingUser.name,
                     email:existingUser.email,
