@@ -125,3 +125,49 @@ export async function PATCH(req: NextRequest,
     }
 
 }
+
+export async function DELETE(req:NextRequest,
+    { params } : {params: Promise<{id: string}>}){
+
+    try{
+        const decoded = await getUserFromRequest(req);
+        const { id: applicationId } = await params;
+
+        const existingApplication = await prisma.application.findFirst({
+            where:{
+                id:applicationId,
+                userId: decoded.userId,
+            }
+        })
+        if(!existingApplication){
+            return NextResponse.json(
+                {messsage: "Application not Found"},
+                {status:404}
+            )
+        }
+        const deletedApplication = await prisma.application.delete({
+            where:{
+                id:applicationId,
+            },
+        });
+        return NextResponse.json(
+            {   message:"User deleted successfully",
+                application: deletedApplication,
+            },
+            {status: 201}
+        )
+    } catch (error){
+        console.log(error);
+        if(error instanceof Error && error.message === "Authentication Failed"){
+            return NextResponse.json(
+                {message: "Authentication Failed"},
+                {status: 401}
+            );
+        }
+        return NextResponse.json(
+            {message:" Internal server error"},
+            {status: 500}
+        )
+    }
+
+}
