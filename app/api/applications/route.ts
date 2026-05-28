@@ -74,3 +74,36 @@ export async function POST(req:NextRequest){
         );
     }
 }
+
+export async function GET(req:NextRequest){
+    try{
+        const decoded = await getUserFromRequest(req);
+    
+        const applications = await prisma.application.findMany({
+            where:{
+                userId: decoded.userId
+            },include: {
+                company: true,
+            },
+        });
+
+        return NextResponse.json(
+            {   message: "Fetched successfully",
+                applications,
+            },
+            {status:200}
+        )
+    }catch (error){
+        console.log(error);
+        if(error instanceof Error && error.message === "Authentication failed"){
+            return NextResponse.json(
+                {message:"Authentication failed"},
+                {status: 401}
+            );
+        }
+        return NextResponse.json(
+            {message: "Internal server error"},
+            {status: 500}
+        )
+    }
+}
