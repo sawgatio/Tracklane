@@ -1,9 +1,9 @@
 
 import { NextRequest, NextResponse } from "next/server";
+import { ApplicationStatus } from "@prisma/client";
 import { getUserFromRequest } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import z from "zod";
-import { ApplicationStatus } from "@prisma/client";
 
 const applicationSchema = z.object({
     companyId: z.string().min(1, "Company id is required"),
@@ -21,8 +21,7 @@ export async function POST(req:NextRequest){
             return NextResponse.json(
                 {   message: "Validation failed",
                     errors: z.flattenError(result.error).fieldErrors,
-                },
-                
+                }, 
                 {status: 400}
             )
         };
@@ -40,7 +39,6 @@ export async function POST(req:NextRequest){
                 {status: 404}
             );
         }
-
         const application = await prisma.application.create
         ({
             data: { 
@@ -84,7 +82,9 @@ export async function GET(req:NextRequest){
                 userId: decoded.userId
             },include: {
                 company: true,
-            },
+            },orderBy:{
+                createdAt: "desc"
+            }
         });
 
         return NextResponse.json(

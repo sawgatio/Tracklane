@@ -4,7 +4,6 @@ import { z } from "zod"
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { prisma } from "@/lib/prisma";
-import { error } from "console";
 
 const signinSchema = z.object({
     email: z.email("Invalid email address"),
@@ -36,7 +35,7 @@ export async function POST(req:NextRequest){
 
         if(!existingUser){
             return NextResponse.json(
-                {message:"Invalid credentials"},
+                {message:"IUser not found"},
                 {status: 401}
             );
         }

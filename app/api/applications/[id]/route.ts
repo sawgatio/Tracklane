@@ -1,8 +1,8 @@
+import { ApplicationStatus, LocationType } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { getUserFromRequest } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import z from "zod";
-import { ApplicationStatus, LocationType } from "@prisma/client";
 
 const applicationSchema = z.object({
     role:z.string().min(1).optional(),
@@ -13,11 +13,11 @@ const applicationSchema = z.object({
 })
 
 export async function GET(req: NextRequest, 
-    { params }: { params: {id: string}}
+    { params }: { params: Promise<{id: string}>}
 ){
     try{
         const decoded = await getUserFromRequest(req);
-        const applicationId = params.id;
+        const {id: applicationId} = await params;
 
         const result = await prisma.application.findFirst({
             where: {
@@ -35,16 +35,16 @@ export async function GET(req: NextRequest,
             )
         }
         return NextResponse.json(
-            {   message: "Fetched succesfully",
+            {   message: "Application fetched succesfully",
                 result,
             },
             { status: 200 }
           );
     }catch(error){
         console.log(error);
-        if(error instanceof Error && error.message === "Authentication Failed")
+        if(error instanceof Error && error.message === "Authentication failed")
         return NextResponse.json(
-            {message: "Authentication Failed"},
+            {message: "Authentication failed"},
             {status: 401},
         )
     }
@@ -112,9 +112,9 @@ export async function PATCH(req: NextRequest,
           );
     }catch(error){
         console.log(error);
-        if(error instanceof Error && error.message === "Authentication Failed"){
+        if(error instanceof Error && error.message === "Authentication failed"){
             return NextResponse.json(
-                {message: "Authentication Failed"},
+                {message: "Authentication failed"},
                 {status: 401}
             );
         }
@@ -158,14 +158,14 @@ export async function DELETE(req:NextRequest,
         )
     } catch (error){
         console.log(error);
-        if(error instanceof Error && error.message === "Authentication Failed"){
+        if(error instanceof Error && error.message === "Authentication failed"){
             return NextResponse.json(
-                {message: "Authentication Failed"},
+                {message: "Authentication failed"},
                 {status: 401}
             );
         }
         return NextResponse.json(
-            {message:" Internal server error"},
+            {message:"Internal server error"},
             {status: 500}
         )
     }

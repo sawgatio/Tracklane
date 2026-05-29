@@ -1,6 +1,6 @@
+import { NextRequest, NextResponse } from "next/server";
 import { getUserFromRequest } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { NextRequest, NextResponse } from "next/server";
 import z from "zod";
 
 
@@ -11,7 +11,7 @@ const companySchema = z.object({
 
 export async function POST(req: NextRequest){
     try{
-        await getUserFromRequest(req);
+        const decoded = await getUserFromRequest(req);
         const body = await req.json();
         const result = companySchema.safeParse(body);
     
@@ -26,18 +26,19 @@ export async function POST(req: NextRequest){
 
         const { name, website } = result.data;
 
-        const existingCompany = await prisma.company.findFirst({
+        const companies = await prisma.company.findFirst({
             where: {
+              userId: decoded.userId,
               name,
-              website: website ?? null,
+              website: website,
             },
           });
 
-          if (existingCompany) {
+          if(companies) {
             return NextResponse.json(
               {
                 message: "Company already exists",
-                company: existingCompany,
+                company: companies,
               },
               { status: 409 }
             );
@@ -49,6 +50,7 @@ export async function POST(req: NextRequest){
                 data:{
                     name,
                     website,
+                    userId: decoded.userId
                 }
             }
         )
@@ -75,4 +77,40 @@ export async function POST(req: NextRequest){
                 {status: 500}
             );
     }
+}
+
+export async function GET(req:NextRequest){
+    try{
+        const decoded = await getUserFromRequest(req);
+        
+        const companies = await prisma.company.findMany(
+            {
+                where:{
+                    userId: decoded.userId
+                },orderBy:{
+                    createdAt: "desc"
+                }
+                
+            });
+
+        return NextResponse.json(
+            {   message: "Companies fetched successfully",
+                companies,
+            },
+            {status: 200},
+        )    
+    } catch(error){
+        console.log(error);
+        if(error instanceof Error && error.message === "Authentication failed"){
+            return NextResponse.json(
+                {message:"Authentication failed"},
+                {status: 401}
+            )
+        }
+        return NextResponse.json(
+            {message:"Internal server error"},
+            {status:500}
+        )
+    }
+
 }
