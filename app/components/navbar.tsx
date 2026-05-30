@@ -12,6 +12,7 @@ export const Navbar = () => {
                 <Link href="/">Home</Link>
                 <Link href="/companies">Companies</Link>
                 <Link href="/signin">Signin</Link>
+                <Link href="/signup">Signup</Link>
             </div>
         </nav>
     );

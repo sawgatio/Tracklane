@@ -102,7 +102,7 @@ export async function DELETE(req:NextRequest,
             {   message:"Company deleted successfully",
                 deletedCompany
             },
-            {status:204}
+            {status:200}
         )
 
     }catch (error){

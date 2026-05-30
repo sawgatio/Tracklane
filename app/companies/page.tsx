@@ -20,6 +20,8 @@ export default function CompaniesPage(){
     const [website, setWebsite] = useState("");
     const [submitLoading, setSubmitLoading] = useState(false);
     const [successMessage, setSuccessMessage] = useState("");
+    const [deleteLoadingId, setDeleteLoadingId] = useState<string | null>(null);
+    
 
 
         
@@ -40,7 +42,8 @@ export default function CompaniesPage(){
                 },
                 });
 
-                const data = await res.json();
+                const text = await res.text();
+                const data = text ? JSON.parse(text) : {};
 
                 if (!res.ok) {
                 setError(data.message || "Failed to fetch companies");
@@ -83,7 +86,8 @@ export default function CompaniesPage(){
                     body: JSON.stringify({ name, website }),
                 });
 
-                const data = await res.json();
+                const text = await res.text();
+                const data = text ? JSON.parse(text) : {};
 
                 if(!res.ok){
                     setError(data.message || "Failed to add company");
@@ -114,6 +118,45 @@ export default function CompaniesPage(){
                   </Container>
                 );
               }
+             
+        async function handleDeleteCompany(companyId: string){
+            setError("");
+            setSuccessMessage("");
+            setDeleteLoadingId(companyId);
+
+            try{
+                const token = localStorage.getItem("token");
+
+
+                if(!token){
+                    router.replace("/signin");
+                    return;
+                }
+
+                const res = await fetch(`http://localhost:3000/api/company/${companyId}`,{
+                    method:"DELETE",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+
+                const text = await res.text();
+                const data = text ? JSON.parse(text) : {};
+
+                if(!res.ok){
+                    setError(data.message || "Failed to delete company");
+                    return;
+                }
+
+                setSuccessMessage("Company deleted successfully");
+                await fetchCompanies();
+            }catch{
+                setError("Something went wrong while deleting company");
+            }finally{
+                setDeleteLoadingId(null);
+            }
+
+        }
         
 
     return (
@@ -159,6 +202,12 @@ export default function CompaniesPage(){
                         <div key={company.id} className="rounded-lg border p-4">
                             <h2 className="font-semibold">{company.name}</h2>
                             <p className="text-sm text-gray-500">{company.website}</p>
+                            <button 
+                                onClick={() => handleDeleteCompany(company.id)}
+                                disabled={deleteLoadingId === company.id}
+                                className="rounded-lg bg-red-100 px-4 py-2 text-red-700">
+                                    {deleteLoadingId === company.id ? "Deleting..." : "Delete"}
+                            </button>
                         </div>
                     ))}
 

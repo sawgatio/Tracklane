@@ -1,50 +1,47 @@
 "use client"
-import React, {  useState } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export default function SigninPage(){
+export default function SignupPage(){
     const router = useRouter();
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
+    const [email, setEmail] = useState();
+    const [password, setPassword] = useState();
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
-
-   const handleSubmit: React.SubmitEventHandler<HTMLFormElement> = async(e) => {
+    
+    const handleSubmit: React.SubmitEventHandler<HTMLFormElement> = async(e) => {
         e.preventDefault();
         setError("");
         setLoading(true);
 
         try{
             const res = await fetch("http://localhost:3000/api/signin",{
-                method: "POST",
-                headers: {
+                method:"POST",
+                headers:{
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({email,password}),
+                body: JSON.stringify({email, password}),
             });
 
             const data = await res.json();
 
-            if(!res.ok) {
-                setError(data.message || "Signin failed");
+            if(!res.ok){
+                setError(data.message || "Signup Failed")
                 return;
             }
-            console.log("Signin success",data);
-            localStorage.setItem("token", data.token);
-            router.replace("/Home");
-        } catch (err) {
+            console.log("Signup success", data);
+            router.replace("/signin");
+        } catch(err){
             setError("Something went wrong");
-        }finally {
+        } finally{
             setLoading(false);
         }
-
     }
-
     return (
         <main className="min-h-screen bg-neutral-50 flex items-center justify-center px-4">
             <div className="w-full max-w-md rounded-2xl border border-neutral-200 bg-white p-8 shadow-sm">
-                <h1 className="text-2xl font-bold text-neutral-900">Sign in</h1>
-                <p className="mt-2 text-sm text-neutral-900">Enter your email and password to continue</p>
+                <h1 className="text-2xl font-bold text-neutral-900">Sign Up</h1>
+                <p className="mt-2 text-sm text-neutral-900">Enter your email and password</p>
 
                 <form onSubmit={handleSubmit} className="mt-6 space-y-4">
                     <div className="space-y-2">
@@ -88,4 +85,5 @@ export default function SigninPage(){
 
         </main>
     )
+
 }
