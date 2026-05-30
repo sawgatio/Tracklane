@@ -11,6 +11,7 @@ export const Navbar = () => {
             <div className="flex items-center gap-4 text-sm">
                 <Link href="/">Home</Link>
                 <Link href="/companies">Companies</Link>
+                <Link href="/signin">Signin</Link>
             </div>
         </nav>
     );

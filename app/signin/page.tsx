@@ -1,14 +1,15 @@
 "use client"
-import React, { SubmitEventHandler, useState } from "react";
-
+import React, {  SubmitEventHandler, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function SigninPage(){
+    const router = useRouter();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
 
-    async function handleSubmit(e: SubmitEvent) {
+   const handleSubmit: React.SubmitEventHandler<HTMLFormElement> = async(e) => {
         e.preventDefault();
         setError("");
         setLoading(true);
@@ -29,6 +30,8 @@ export default function SigninPage(){
                 return;
             }
             console.log("Signin success",data);
+            localStorage.setItem("token", data.token);
+            router.replace("/companies");
         } catch (err) {
             setError("Something went wrong");
         }finally {
@@ -52,11 +55,11 @@ export default function SigninPage(){
                             placeholder="you@gmail.com"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="w-full rounded-lg border border-neutral-300 px-3 py-2 outline-none focus:border-neutral-500"
+                            className="w-full text-neutral-950 rounded-lg border border-neutral-300 px-3 py-2 outline-none focus:border-neutral-500"
                             required />    
                     </div>
                     <div className="space-y-2">
-                        <label htmlFor="password" className="block text-sm font-medium text-neutral-700">
+                        <label htmlFor="password" className=" block text-sm font-medium text-neutral-700">
                         Password
                         </label>
                         <input
@@ -66,7 +69,7 @@ export default function SigninPage(){
                             placeholder="Enter your password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            className="w-full rounded-lg border border-neutral-300 px-3 py-2 outline-none focus:border-neutral-500"
+                            className="w-full text-neutral-950  rounded-lg border border-neutral-300 px-3 py-2 outline-none focus:border-neutral-500"
                             required
                         />
                     </div>
