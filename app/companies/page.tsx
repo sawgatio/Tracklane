@@ -9,7 +9,6 @@ type Company = {
     website: string;
   };
 
-
 export default function CompaniesPage(){
     const router = useRouter();
     const [companies, setCompanies] = useState<Company[]>([]);
@@ -20,7 +19,9 @@ export default function CompaniesPage(){
     const [website, setWebsite] = useState("");
     const [submitLoading, setSubmitLoading] = useState(false);
     const [successMessage, setSuccessMessage] = useState("");
+    const [editSubmitLoading, setEditSubmitLoading] = useState(false);
     const [deleteLoadingId, setDeleteLoadingId] = useState<string | null>(null);
+    const [editingCompanyId, setEditingCompanyId] = useState<string | null>(null);
     
 
 
@@ -157,14 +158,56 @@ export default function CompaniesPage(){
             }
 
         }
-        
+
+        const handleEditCompany = (companyId: string):React.SubmitEventHandler<HTMLFormElement> => 
+            async(e) => {
+            e.preventDefault();
+            setError("");
+            setSuccessMessage("");
+            setEditingCompanyId(companyId);
+            setEditSubmitLoading(true);
+
+            try{
+                const token = localStorage.getItem("token");
+
+                if(!token){
+                    router.replace("/signin");
+                    return;
+                }
+                const res = await fetch(`http://localhost:3000/api/company/${companyId}`,{
+                    method: "PATCH",
+                    headers:{
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({name,website})
+                });
+                const text = await res.text();
+                const data = text ? JSON.parse(text) : {};
+
+                if(!res.ok){
+                    setError(data.message || "Failed to update company");
+                    return;
+                }
+                setSuccessMessage("Company data updated successfully");
+                setName("");
+                setWebsite("");
+                setEditingCompanyId(null);
+                await fetchCompanies();
+            }catch{
+                setError("Something went wrong while updating company");
+            }finally{
+                setEditSubmitLoading(false);
+            }
+        }
+    
 
     return (
         <Container>
             <div className="py-10">
                 <h1 className="text-2xl font-bold">Companies</h1>
 
-                <form onSubmit={handleAddCompany} className="mt-6 space-y-4 rounded-lg border p-4">
+                <form onSubmit={editingCompanyId ? handleEditCompany(editingCompanyId) : handleAddCompany} className="mt-6 space-y-4 rounded-lg border p-4">
                     <div>
                         <label className="block text-sm font-medium text-neutral-700">Company Name</label>
                         <input type="text"
@@ -188,9 +231,11 @@ export default function CompaniesPage(){
                     {error ? <p className="text-sm text-red-600">{error}</p>:null}
                     {successMessage ? <p className="text-sm text-green-600">{successMessage}</p>:null}
                     <button type="submit"
-                        disabled={submitLoading}
+                        disabled={editingCompanyId ? editSubmitLoading : submitLoading}
                          className="rounded-lg bg-neutral-900 px-4 py-2 text-white transition hover:bg-neutral-800 disabled:opacity-50">
-                            {submitLoading ? "Adding..." : "Add Company"}
+                            {editingCompanyId ? 
+                            (editSubmitLoading ? "Updating..." : "Update Company")
+                            :(submitLoading ? "Adding..." : "Add Company")}
 
                     </button>
                     
@@ -199,16 +244,43 @@ export default function CompaniesPage(){
 
                 <div className="mt-6 space-y-4">
                     {companies.map((company) => (
-                        <div key={company.id} className="rounded-lg border p-4">
+                        <div key={company.id} className="rounded-lg border p-4 ">
                             <h2 className="font-semibold">{company.name}</h2>
                             <p className="text-sm text-gray-500">{company.website}</p>
-                            <button 
+                            <button type="button" 
                                 onClick={() => handleDeleteCompany(company.id)}
                                 disabled={deleteLoadingId === company.id}
                                 className="rounded-lg bg-red-100 px-4 py-2 text-red-700">
                                     {deleteLoadingId === company.id ? "Deleting..." : "Delete"}
                             </button>
+
+                            <button type="button"
+                                onClick={() => {
+                                    setName(company.name);
+                                    setWebsite(company.website);
+                                    setEditingCompanyId(company.id);
+                                    setError("");
+                                    setSuccessMessage("");
+                                }}
+                                disabled={editingCompanyId === company.id}
+                                className="rounded-lg  bg-red-100 px-4 ml-2 py-2 text-red-700">
+                                    Edit
+                            </button>
+
+                            {editingCompanyId === company.id && (
+                                <button type="button" 
+                                    className="rounded-lg  bg-red-100 px-4 ml-2 py-2 text-red-700"
+                                onClick={() => {
+                                    setEditingCompanyId(null);
+                                    setName("");
+                                    setWebsite("");
+                                    
+                                }}>
+                                    Cancel
+                                </button>
+                            )}
                         </div>
+
                     ))}
 
                 </div>
